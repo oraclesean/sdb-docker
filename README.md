@@ -139,14 +139,14 @@ EOF
 done
 ```
 # Cleanup
-To stop compose, remove any existing image and prune the images:
+## To stop compose, remove any existing image and prune the images:
 ```
 docker-compose down
 docker rmi oracle/database/gsm:19.3.0-ee
 docker image prune <<< y
 ```
 
-# Clear out the ORADATA volume
+## Clear out the ORADATA volume
 ```
 if [[ "$ORADATA_VOLUME" ]] && [ -d "$ORADATA_VOLUME" ]
   then rm -Rf $ORADATA_VOLUME/SH*
