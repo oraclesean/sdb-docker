@@ -14,35 +14,42 @@ For a three shard environment this is 28G.
 This repo is built on the Oracle Docker repository: https://github.com/oracle/docker-images
 
 Download the following files from Oracle OTN:
-`LINUX.X64_193000_gsm.zip`
-`LINUX.X64_193000_db_home.zip`
+```
+LINUX.X64_193000_gsm.zip
+LINUX.X64_193000_db_home.zip
+```
 
 ## Set the environment
 The ORA_DOCKER_DIR is the location of the existing docker-images directory. The ORADATA_VOLUME is for persisting data for the databases. Each database will inhabit a subdirectory of ORADATA_VOLUME based on the database unique name.
-`export COMPOSE_YAML=docker-compose.yml
+```
+export COMPOSE_YAML=docker-compose.yml
 export DB_VERSION=19.3.0
 export IMAGE_NAME=oracle/database/gsm:${DB_VERSION}-ee
 export ORA_DOCKER_DIR=~/docker
 export ORADATA_VOLUME=~/oradata
-export SHARD_DIR=~/sdb-docker`
+export SHARD_DIR=~/sdb-docker
+```
 
 ## Copy the Oracle Docker files from their current location to the Shard directory:
 `cp $ORA_DOCKER_DIR/docker-images/OracleDatabase/SingleInstance/dockerfiles/$DB_VERSION/* $SHARD_DIR`
 
 ## Copy the downloaded Oracle GSM and Oracle database installation files to the Shard directory:
-`cp LINUX.X64_193000_gsm.zip $SHARD_DIR
-cp LINUX.X64_193000_db_home.zip $SHARD_DIR`
+```
+cp LINUX.X64_193000_gsm.zip $SHARD_DIR
+cp LINUX.X64_193000_db_home.zip $SHARD_DIR
+```
 
 ## Navigate to the Shard directory
-cd $SHARD_DIR
+`cd $SHARD_DIR`
 
 ## Run the build to create the oracle/datbase/gsm:19.3.0-ee Docker image
-./buildDockerImage.gsm.sh -v 19.3.0 -e
+`./buildDockerImage.gsm.sh -v 19.3.0 -e`
 
 ## Run compose (detached)
-docker-compose up -d
+`docker-compose up -d`
+
 ## Tail the logs
-docker-compose logs -f
+`docker-compose logs -f`
 
 
 
@@ -53,6 +60,7 @@ Customize a configuration file for setting up the contaner hosts using the follo
 The container name is the DB_UNIQUE_NAME.
 The pluggable database is ${ORACLE_SID}PDB1.
 
+```
 cat << EOF > $SHARD_DIR/config_dataguard.lst
 # Container | ID | Role   | DG Config | SID  | DG_TARGET | Oracle Pass | Shard Role | GSM pass | GDS user | GDS pass | Shard DB | Shard DB Name | Shard Dir | Port | Region
 SH00        | 0  | PRIMARY| NONE      | SH00 |           | oracle      | CATALOG    | oracle   | gdsadmin | oracle   | SH00PDB1 | shardcat      | sharddir1 | 1571 | na,eu,asia
@@ -63,11 +71,13 @@ SH22        | 4  | STANDBY| SH2       | SH12 | SH12      | oracle      |        
 SH13        | 5  | PRIMARY| SH3       | SH13 | SH23      | oracle      |            | oracle   | gdsadmin | oracle   |          |               |           |      | asia
 SH23        | 6  | STANDBY| SH3       | SH13 | SH13      | oracle      |            |          |          |          |          |               |           |      | asia
 EOF
+```
 
 ## Docker compose file, TNS configuration
 If using a custom dataguard configuration (above) there will need to be changes to the TNS configuration and Docker compose file.
 
-Create a docker-compose file and build tnsnames.ora, listener.ora files
+### Create a docker-compose file and build tnsnames.ora, listener.ora files
+```
 # Initialize the files:
 cat << EOF > $COMPOSE_YAML
 version: '3'
@@ -127,3 +137,4 @@ $CONTAINER_NAME=
 EOF
 
 done
+```
