@@ -1,0 +1,5 @@
+oracle.install.responseFileVersion=/oracle/install/rspfmt_gsminstall_response_schema_v19.0.0
+UNIX_GROUP_NAME=dba
+INVENTORY_LOCATION=/opt/oracle/oraInventory
+ORACLE_HOME=###GSM_HOME###
+ORACLE_BASE=###ORACLE_BASE###
