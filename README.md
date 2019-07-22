@@ -2,67 +2,57 @@
 
 Files for building an Oracle sharded database in Docker, allowing users to more easily experiemnt with Oracle SDB technology.
 
-An Oracle shard database requires a catalog database and multiple shard databases. Each shard is an Active Data Guard
-configuration, consisting of a primary/standby. To have a SDB with three shards would typically require seven databases,
-three primary, three standby, and a catalog database. Running this in VM is a costly proposition but it can be done in
-Docker rather easily, provided the system has adequate memory.
+An Oracle shard database requires a catalog database and multiple shard databases. Each shard is an Active Data Guard configuration, consisting of a primary/standby. To have a SDB with three shards would typically require seven databases, three primary, three standby, and a catalog database. Running this in VM is a costly proposition but it can be done in Docker rather easily, provided the system has adequate memory.
 
-# Setup
--------
+## Setup
+
 Set Docker's memory limit in GB to ((8 * shard_count) * 4)
 For a two shard environment this is 20G.
 For a three shard environment this is 28G.
 
-# Prerequisites
----------------
+## Prerequisites
 This repo is built on the Oracle Docker repository: https://github.com/oracle/docker-images
 
 Download the following files from Oracle OTN:
-LINUX.X64_193000_gsm.zip
-LINUX.X64_193000_db_home.zip
+`LINUX.X64_193000_gsm.zip`
+`LINUX.X64_193000_db_home.zip`
 
-# Set the environment
----------------------
-# The ORA_DOCKER_DIR is the location of the existing docker-images directory.
-# The ORADATA_VOLUME is for persisting data for the databases. Each database will inhabit a subdirectory of ORADATA_VOLUME
-# based on the database 
-
-export COMPOSE_YAML=docker-compose.yml
+## Set the environment
+The ORA_DOCKER_DIR is the location of the existing docker-images directory. The ORADATA_VOLUME is for persisting data for the databases. Each database will inhabit a subdirectory of ORADATA_VOLUME based on the database unique name.
+`export COMPOSE_YAML=docker-compose.yml
 export DB_VERSION=19.3.0
 export IMAGE_NAME=oracle/database/gsm:${DB_VERSION}-ee
 export ORA_DOCKER_DIR=~/docker
 export ORADATA_VOLUME=~/oradata
-export SHARD_DIR=~/sdb-docker
+export SHARD_DIR=~/sdb-docker`
 
-# Copy the Oracle Docker files from their current location to the Shard directory:
-cp $ORA_DOCKER_DIR/docker-images/OracleDatabase/SingleInstance/dockerfiles/$DB_VERSION/* $SHARD_DIR
+## Copy the Oracle Docker files from their current location to the Shard directory:
+`cp $ORA_DOCKER_DIR/docker-images/OracleDatabase/SingleInstance/dockerfiles/$DB_VERSION/* $SHARD_DIR`
 
-# Copy the downloaded Oracle GSM and Oracle database installation files to the Shard directory:
-cp LINUX.X64_193000_gsm.zip $SHARD_DIR
-cp LINUX.X64_193000_db_home.zip $SHARD_DIR
+## Copy the downloaded Oracle GSM and Oracle database installation files to the Shard directory:
+`cp LINUX.X64_193000_gsm.zip $SHARD_DIR
+cp LINUX.X64_193000_db_home.zip $SHARD_DIR`
 
-# Navigate to the Shard directory
+## Navigate to the Shard directory
 cd $SHARD_DIR
 
-# Run the build to create the oracle/datbase/gsm:19.3.0-ee Docker image
+## Run the build to create the oracle/datbase/gsm:19.3.0-ee Docker image
 ./buildDockerImage.gsm.sh -v 19.3.0 -e
 
-# Run compose (detached)
+## Run compose (detached)
 docker-compose up -d
-# Tail the logs
+## Tail the logs
 docker-compose logs -f
 
 
 
-# OPTIONAL: Database configurations
------------------------------------
-# Customize a configuration file for setting up the contaner hosts using the following format if the existing
-# config_dataguard.lst (for a three-shard database) does not meet your needs. This file is used for automated 
-# setup of the environment.
-#
-# The container name is the DB_UNIQUE_NAME
-# The pluggable database is ${ORACLE_SID}PDB1
-#
+# OPTIONAL STEPS
+## Database configurations
+Customize a configuration file for setting up the contaner hosts using the following format if the existing config_dataguard.lst (for a three-shard database) does not meet your needs. This file is used for automated setup of the environment.
+
+The container name is the DB_UNIQUE_NAME.
+The pluggable database is ${ORACLE_SID}PDB1.
+
 cat << EOF > $SHARD_DIR/config_dataguard.lst
 # Container | ID | Role   | DG Config | SID  | DG_TARGET | Oracle Pass | Shard Role | GSM pass | GDS user | GDS pass | Shard DB | Shard DB Name | Shard Dir | Port | Region
 SH00        | 0  | PRIMARY| NONE      | SH00 |           | oracle      | CATALOG    | oracle   | gdsadmin | oracle   | SH00PDB1 | shardcat      | sharddir1 | 1571 | na,eu,asia
@@ -74,12 +64,10 @@ SH13        | 5  | PRIMARY| SH3       | SH13 | SH23      | oracle      |        
 SH23        | 6  | STANDBY| SH3       | SH13 | SH13      | oracle      |            |          |          |          |          |               |           |      | asia
 EOF
 
-# OPTONAL: Docker compose file, TNS configuration
--------------------------------------------------
-# If using a custom dataguard configuration (above) there will need to be changes to the TNS configuration and
-# Docker compose file.
+## Docker compose file, TNS configuration
+If using a custom dataguard configuration (above) there will need to be changes to the TNS configuration and Docker compose file.
 
-# Create a docker-compose file and build tnsnames.ora, listener.ora files
+Create a docker-compose file and build tnsnames.ora, listener.ora files
 # Initialize the files:
 cat << EOF > $COMPOSE_YAML
 version: '3'
