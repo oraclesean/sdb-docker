@@ -180,7 +180,7 @@ else
   $ORACLE_BASE/$CREATE_DB_FILE $ORACLE_SID $ORACLE_PDB $ORACLE_PWD;
 
   # Move database operational files to oradata
-  moveFiles;
+#  moveFiles;
 
   # Execute custom provided setup scripts
   $ORACLE_BASE/$USER_SCRIPTS_FILE $ORACLE_BASE/scripts/setup
@@ -205,26 +205,6 @@ else
   echo "########### E R R O R ###############" 
   echo "#####################################"
 fi;
-
-if [ -f $ORACLE_BASE/validateShard.out ]
-then
-echo "#############################################"
-echo "### Results of DBMS_GSM_FIX.validateShard ###"
-echo "#############################################"
-cat $ORACLE_BASE/validateShard.out
-
-shardStatus=$(egrep -i "ERROR|WARNING" $ORACLE_BASE/validateShard.out | wc -l)
- 
-if [ $shardStatus -gt 0 ]
-then
-echo " "
-echo "#############################################"
-echo " validateShard produced one or more errors or"
-echo " warnings. Check the output of the procedure."
-echo "#############################################"
-fi
-
-fi
 
 # Tail on alert log and wait (otherwise container will exit)
 echo "The following output is now a tail of the alert.log:"

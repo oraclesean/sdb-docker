@@ -109,9 +109,12 @@ cat $ORACLE_BASE/scripts/tnsnames.ora >> $ORACLE_HOME/network/admin/tnsnames.ora
 # Copy the TNS file to the GSM network directory:
 cp $ORACLE_HOME/network/admin/tnsnames.ora $GSM_HOME/network/admin/tnsnames.ora
 
+echo " "
+echo "     Container name is: $CONTAINER_NAME"
 echo "     Container role is: $ROLE"
 echo "Container DG Target is: $DG_TARGET"
 echo "             DB SID is: $ORACLE_SID"
+echo " "
 
 if [[ "$ROLE" = "PRIMARY" ]]; then
 
@@ -138,6 +141,7 @@ EOF
 echo "###########################################"
 echo " Running modifications to PRIMARY database"
 echo "###########################################"
+echo " "
 
 sqlplus / as sysdba << EOF
 alter database force logging;
@@ -170,6 +174,24 @@ execute DBMS_GSM_FIX.validateShard
 spool off
 EOF
 
+if [ -f $ORACLE_BASE/validateShard.out ]; then
+echo "#############################################"
+echo "### Results of DBMS_GSM_FIX.validateShard ###"
+echo "#############################################"
+cat $ORACLE_BASE/validateShard.out
+echo " "
+
+shardStatus=$(egrep -i "ERROR|WARNING" $ORACLE_BASE/validateShard.out | wc -l)
+
+    if [ $shardStatus -gt 0 ]; then
+       echo "#############################################"
+       echo " validateShard produced one or more errors or"
+       echo " warnings. Check the output of the procedure."
+       echo "#############################################"
+       echo " "
+    fi
+fi
+
 # Remove auditing
 # noaudit all;
 # noaudit all on default;
@@ -178,8 +200,9 @@ EOF
 if [[ ! -z "$DG_TARGET" ]]; then
 
 echo "#############################################"
-echo " Running modifications to DG PRIMARY database"
+echo " Preparing $ORACLE_SID standby configuration"
 echo "#############################################"
+echo " "
 
 # Add standby logs
 sqlplus "/ as sysdba" <<EOF
@@ -190,6 +213,11 @@ alter system set standby_file_management=AUTO;
 EOF
 
 # Duplicate database for DG
+echo "#############################################"
+echo " Beginning duplicate of $ORACLE_SID to $DG_TARGET"
+echo "#############################################"
+echo " "
+
 mkdir -p $ORACLE_BASE/cfgtools/rmanduplicate
 rman target sys/$ORACLE_PWD@$ORACLE_SID auxiliary sys/$ORACLE_PWD@$DG_TARGET log=$ORACLE_BASE/cfgtoollogs/rmanduplicate/$ORACLE_SID.log << EOF
 duplicate target database
@@ -201,6 +229,11 @@ duplicate target database
 EOF
 
 cat $ORACLE_BASE/cfgtools/rmanduplicate/$ORACLE_SID.log
+
+echo "#############################################"
+echo " Starting and configuring DataGuard Broker"
+echo "#############################################"
+echo " "
 
 sqlplus "/ as sysdba" <<EOF
 alter system set dg_broker_start=true;
@@ -227,17 +260,25 @@ else
 echo "###########################################"
 echo " Running modifications to STANDBY database"
 echo "###########################################"
-
-# Create a password file on the replication target:
-$ORACLE_HOME/bin/orapwd file=${ORACLE_BASE}/oradata/dbconfig/${ORACLE_SID}/orapw${ORACLE_SID} force=yes format=12 <<< $ORACLE_PWD >> ${ORACLE_BASE}/scripts/orapwd${CONTAINER_NAME}.out
-ln -s $ORACLE_BASE/oradata/dbconfig/$ORACLE_SID/orapw${ORACLE_SID} $ORACLE_HOME/dbs
+echo " "
 
 # Create a pfile for startup of the DG replication target:
 cat << EOF > $ORACLE_HOME/dbs/initDG.ora
 *.db_name='$ORACLE_SID'
 EOF
 
-# Shutdown the DG replication targets and start with the pfile
+# Create a password file on the replication target.
+# NOTE: Couldn't get this to work as a straight command, had to create a dummy script and call it separately to avoid OPW-00001
+cat << EOF > $ORACLE_BASE/createPWF.sh
+rm $ORACLE_HOME/dbs/orapw${ORACLE_SID}
+$ORACLE_HOME/bin/orapwd file=${ORACLE_BASE}/oradata/dbconfig/${ORACLE_SID}/orapw${ORACLE_SID} force=yes format=12 <<< $ORACLE_PWD
+ln -s $ORACLE_BASE/oradata/dbconfig/$ORACLE_SID/orapw$ORACLE_SID $ORACLE_HOME/dbs
+EOF
+chmod 700 $ORACLE_BASE/createPWF.sh
+$ORACLE_BASE/createPWF.sh
+rm $ORACLE_BASE/createPWF.sh
+
+# Start the DG target database in nomount
 sqlplus / as sysdba <<EOF
 startup nomount pfile='$ORACLE_HOME/dbs/initDG.ora';
 EOF
@@ -248,6 +289,7 @@ lsnrctl start
 echo "#########################################"
 echo " End of modifications to STANDBY database"
 echo "#########################################"
+echo " "
 fi
 
 # Remove temporary response file
