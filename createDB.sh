@@ -43,6 +43,7 @@ if [ `nproc` -gt 8 ]; then
 fi;
 
 # Create directories:
+mkdir -p $ORACLE_BASE/oradata/dbconfig/$ORACLE_SID
 mkdir -p $ORACLE_BASE/oradata/$ORACLE_SID/archivelog
 mkdir -p $ORACLE_BASE/oradata/$ORACLE_SID/autobackup
 mkdir -p $ORACLE_BASE/oradata/$ORACLE_SID/flashback
@@ -268,15 +269,9 @@ cat << EOF > $ORACLE_HOME/dbs/initDG.ora
 EOF
 
 # Create a password file on the replication target.
-# NOTE: Couldn't get this to work as a straight command, had to create a dummy script and call it separately to avoid OPW-00001
-cat << EOF > $ORACLE_BASE/createPWF.sh
 rm $ORACLE_HOME/dbs/orapw${ORACLE_SID}
-$ORACLE_HOME/bin/orapwd file=${ORACLE_BASE}/oradata/dbconfig/${ORACLE_SID}/orapw${ORACLE_SID} force=yes format=12 <<< $ORACLE_PWD
+$ORACLE_HOME/bin/orapwd file=${ORACLE_BASE}/oradata/dbconfig/${ORACLE_SID}/orapw${ORACLE_SID} force=yes format=12 <<< $(echo $ORACLE_PWD)
 ln -s $ORACLE_BASE/oradata/dbconfig/$ORACLE_SID/orapw$ORACLE_SID $ORACLE_HOME/dbs
-EOF
-chmod 700 $ORACLE_BASE/createPWF.sh
-$ORACLE_BASE/createPWF.sh
-rm $ORACLE_BASE/createPWF.sh
 
 # Start the DG target database in nomount
 sqlplus / as sysdba <<EOF
