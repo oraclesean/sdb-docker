@@ -21,8 +21,22 @@ fi;
 # Start Listener
 lsnrctl start
 
+if [ "$ROLE" = "STANDBY" ]
+then
+
+# Start standby databases in managed recovery
+sqlplus / as sysdba << EOF
+startup mount;
+alter database recover managed standby database disconnect from session;
+exit
+EOF
+
+else
+
 # Start database
 sqlplus / as sysdba << EOF
-   STARTUP;
-   exit;
+startup
+exit
 EOF
+
+fi

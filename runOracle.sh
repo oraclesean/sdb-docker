@@ -159,15 +159,15 @@ export ORACLE_CHARACTERSET=${ORACLE_CHARACTERSET:-AL32UTF8}
 # Check whether database already exists
 if [ -d $ORACLE_BASE/oradata/$ORACLE_SID ]; then
    symLinkFiles;
-   
+
    # Make sure audit file destination exists
    if [ ! -d $ORACLE_BASE/admin/$ORACLE_SID/adump ]; then
       mkdir -p $ORACLE_BASE/admin/$ORACLE_SID/adump
    fi;
-   
+
    # Start database
    $ORACLE_BASE/$START_FILE;
-   
+
 else
   # Remove database config files, if they exist
   rm -f $ORACLE_HOME/dbs/spfile$ORACLE_SID.ora
@@ -175,15 +175,16 @@ else
   rm -f $ORACLE_HOME/network/admin/sqlnet.ora
   rm -f $ORACLE_HOME/network/admin/listener.ora
   rm -f $ORACLE_HOME/network/admin/tnsnames.ora
-   
+
   # Create database
   $ORACLE_BASE/$CREATE_DB_FILE $ORACLE_SID $ORACLE_PDB $ORACLE_PWD;
-   
+
   # Move database operational files to oradata
   moveFiles;
 
   # Execute custom provided setup scripts
   $ORACLE_BASE/$USER_SCRIPTS_FILE $ORACLE_BASE/scripts/setup
+
 fi;
 
 # Check whether database is up and running
@@ -192,10 +193,10 @@ if [ $? -eq 0 ]; then
   echo "#########################"
   echo "DATABASE IS READY TO USE!"
   echo "#########################"
-  
+
   # Execute custom provided startup scripts
   $ORACLE_BASE/$USER_SCRIPTS_FILE $ORACLE_BASE/scripts/startup
-  
+
 else
   echo "#####################################"
   echo "########### E R R O R ###############"

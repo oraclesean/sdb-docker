@@ -2,16 +2,16 @@
 # LICENSE UPL 1.0
 #
 # Copyright (c) 1982-2018 Oracle and/or its affiliates. All rights reserved.
-# 
+#
 # Since: November, 2016
 # Author: gerald.venzl@oracle.com
 # Description: Creates an Oracle Database based on following parameters:
 #              $ORACLE_SID: The Oracle SID and CDB name
 #              $ORACLE_PDB: The PDB name
 #              $ORACLE_PWD: The Oracle password
-# 
+#
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
-# 
+#
 
 set -e
 
@@ -47,6 +47,7 @@ mkdir -p $ORACLE_BASE/oradata/$ORACLE_SID/archivelog
 mkdir -p $ORACLE_BASE/oradata/$ORACLE_SID/autobackup
 mkdir -p $ORACLE_BASE/oradata/$ORACLE_SID/flashback
 mkdir -p $ORACLE_BASE/oradata/$ORACLE_SID/fast_recovery_area
+mkdir -p $ORACLE_BASE/$ORACLE_SID/adump
 
 # Add aliases to set up the environment:
 cat << EOF >> $HOME/env
@@ -62,13 +63,13 @@ echo "NAME.DIRECTORY_PATH= (TNSNAMES, EZCONNECT, HOSTNAME)" > $ORACLE_HOME/netwo
 
 # Listener.ora
 cat << EOF > $ORACLE_HOME/network/admin/listener.ora
-LISTENER = 
-(DESCRIPTION_LIST = 
-  (DESCRIPTION = 
-    (ADDRESS = (PROTOCOL = IPC)(KEY = EXTPROC1)) 
-    (ADDRESS = (PROTOCOL = TCP)(HOST = 0.0.0.0)(PORT = 1521)) 
-  ) 
-) 
+LISTENER =
+(DESCRIPTION_LIST =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = IPC)(KEY = EXTPROC1))
+    (ADDRESS = (PROTOCOL = TCP)(HOST = 0.0.0.0)(PORT = 1521))
+  )
+)
 
 DEDICATED_THROUGH_BROKER_LISTENER=ON
 DIAG_ADR_ENABLED = off
@@ -81,16 +82,20 @@ SID_LIST_LISTENER =
       (SID_NAME = $ORACLE_SID)
     )
   )
+
+SID_LIST_LISTENER =
+  (SID_LIST =
+    (SID_DESC =
+      (GLOBAL_DBNAME = ${ORACLE_SID}_DGMGRL)
+      (ORACLE_HOME = $ORACLE_HOME)
+      (SID_NAME = $ORACLE_SID)
+    )
+  )
 EOF
 
-# Start LISTENER and run DBCA
-lsnrctl start &&
-dbca -silent -createDatabase -responseFile $ORACLE_BASE/dbca.rsp ||
- cat /opt/oracle/cfgtoollogs/dbca/$ORACLE_SID/$ORACLE_SID.log ||
- cat /opt/oracle/cfgtoollogs/dbca/$ORACLE_SID.log
-
-echo "$ORACLE_PDB= 
-(DESCRIPTION = 
+# TNSnames.ora
+echo "$ORACLE_PDB=
+(DESCRIPTION =
   (ADDRESS = (PROTOCOL = TCP)(HOST = 0.0.0.0)(PORT = 1521))
   (CONNECT_DATA =
     (SERVER = DEDICATED)
@@ -104,6 +109,23 @@ cat $ORACLE_BASE/scripts/tnsnames.ora >> $ORACLE_HOME/network/admin/tnsnames.ora
 # Copy the TNS file to the GSM network directory:
 cp $ORACLE_HOME/network/admin/tnsnames.ora $GSM_HOME/network/admin/tnsnames.ora
 
+echo "     Container role is: $ROLE"
+echo "Container DG Target is: $DG_TARGET"
+echo "             DB SID is: $ORACLE_SID"
+
+if [[ "$ROLE" = "PRIMARY" ]]; then
+
+# #############################################################
+#                  Prepare a primary database                 #
+# #############################################################
+
+# Start LISTENER and run DBCA
+lsnrctl start
+
+dbca -silent -createDatabase -responseFile $ORACLE_BASE/dbca.rsp \
+  || cat /opt/oracle/cfgtoollogs/dbca/$ORACLE_SID/$ORACLE_SID.log \
+  || cat /opt/oracle/cfgtoollogs/dbca/$ORACLE_SID.log
+
 # Remove second control file, fix local_listener, make PDB auto open, enable EM global port
 sqlplus / as sysdba << EOF
    ALTER SYSTEM SET control_files='$ORACLE_BASE/oradata/$ORACLE_SID/control01.ctl' scope=spfile;
@@ -112,13 +134,6 @@ sqlplus / as sysdba << EOF
    EXEC DBMS_XDB_CONFIG.SETGLOBALPORTENABLED (TRUE);
    exit;
 EOF
-
-echo "Container role is: $ROLE"
-echo "Container DG Target is: $DG_TARGET"
-
-# If this database's role is PRIMARY perform the necessary configuration:
-if [[ "$ROLE" = "PRIMARY" ]] 
-then
 
 echo "###########################################"
 echo " Running modifications to PRIMARY database"
@@ -155,39 +170,84 @@ execute DBMS_GSM_FIX.validateShard
 spool off
 EOF
 
+# Remove auditing
+# noaudit all;
+# noaudit all on default;
+
 # If this database has a DG Target assigned, create the standby redo logs:
-if [[ ! -z "$DG_TARGET" ]]
-then
+if [[ ! -z "$DG_TARGET" ]]; then
 
-echo "###########################################"
-echo " Running modifications to TARGET database"
-echo "###########################################"
+echo "#############################################"
+echo " Running modifications to DG PRIMARY database"
+echo "#############################################"
 
+# Add standby logs
 sqlplus "/ as sysdba" <<EOF
 alter database add standby logfile ('/opt/oracle/oradata/$ORACLE_SID/standby_redo01.log') size 200m;
 alter database add standby logfile ('/opt/oracle/oradata/$ORACLE_SID/standby_redo02.log') size 200m;
 alter database add standby logfile ('/opt/oracle/oradata/$ORACLE_SID/standby_redo03.log') size 200m;
 alter system set standby_file_management=AUTO;
 EOF
+
+# Duplicate database for DG
+mkdir -p $ORACLE_BASE/cfgtools/rmanduplicate
+rman target sys/$ORACLE_PWD@$ORACLE_SID auxiliary sys/$ORACLE_PWD@$DG_TARGET log=$ORACLE_BASE/cfgtoollogs/rmanduplicate/$ORACLE_SID.log << EOF
+duplicate target database
+      for standby
+     from active database
+          dorecover
+          spfile set db_unique_name='$DG_TARGET'
+          nofilenamecheck;
+EOF
+
+cat $ORACLE_BASE/cfgtools/rmanduplicate/$ORACLE_SID.log
+
+sqlplus "/ as sysdba" <<EOF
+alter system set dg_broker_start=true;
+EOF
+
+dgmgrl sys/$ORACLE_PWD@$ORACLE_SID << EOF
+create configuration $DG_CONFIG as primary database is $ORACLE_SID connect identifier is $ORACLE_SID;
+add database $DG_TARGET as connect identifier is $DG_TARGET maintained as physical;
+enable configuration;
+show configuration;
+show database $ORACLE_SID
+show database $DG_TARGET
+EOF
+
 fi
 
 else
 
+# #############################################################
+#                  Prepare a standby database                 #
+# #############################################################
+
+# Prepare the standby database.
 echo "###########################################"
 echo " Running modifications to STANDBY database"
 echo "###########################################"
+
+# Create a password file on the replication target:
+$ORACLE_HOME/bin/orapwd file=${ORACLE_BASE}/oradata/dbconfig/${ORACLE_SID}/orapw${ORACLE_SID} force=yes format=12 <<< $ORACLE_PWD >> ${ORACLE_BASE}/scripts/orapwd${CONTAINER_NAME}.out
+ln -s $ORACLE_BASE/oradata/dbconfig/$ORACLE_SID/orapw${ORACLE_SID} $ORACLE_HOME/dbs
 
 # Create a pfile for startup of the DG replication target:
 cat << EOF > $ORACLE_HOME/dbs/initDG.ora
 *.db_name='$ORACLE_SID'
 EOF
 
-# Shutdown the DG replication targets and start with the pfile:
+# Shutdown the DG replication targets and start with the pfile
 sqlplus / as sysdba <<EOF
-shutdown abort
 startup nomount pfile='$ORACLE_HOME/dbs/initDG.ora';
 EOF
 
+# Start listener
+lsnrctl start
+
+echo "#########################################"
+echo " End of modifications to STANDBY database"
+echo "#########################################"
 fi
 
 # Remove temporary response file
