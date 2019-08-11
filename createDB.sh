@@ -219,7 +219,7 @@ echo " Beginning duplicate of $ORACLE_SID to $DG_TARGET"
 echo "#############################################"
 echo " "
 
-mkdir -p $ORACLE_BASE/cfgtools/rmanduplicate
+mkdir -p $ORACLE_BASE/cfgtoollogs/rmanduplicate
 rman target sys/$ORACLE_PWD@$ORACLE_SID auxiliary sys/$ORACLE_PWD@$DG_TARGET log=$ORACLE_BASE/cfgtoollogs/rmanduplicate/$ORACLE_SID.log << EOF
 duplicate target database
       for standby
@@ -229,7 +229,7 @@ duplicate target database
           nofilenamecheck;
 EOF
 
-cat $ORACLE_BASE/cfgtools/rmanduplicate/$ORACLE_SID.log
+cat $ORACLE_BASE/cfgtoollogs/rmanduplicate/$ORACLE_SID.log
 
 echo "#############################################"
 echo " Starting and configuring DataGuard Broker"
