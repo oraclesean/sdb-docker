@@ -269,7 +269,6 @@ cat << EOF > $ORACLE_HOME/dbs/initDG.ora
 EOF
 
 # Create a password file on the replication target.
-rm $ORACLE_HOME/dbs/orapw${ORACLE_SID}
 $ORACLE_HOME/bin/orapwd file=${ORACLE_BASE}/oradata/dbconfig/${ORACLE_SID}/orapw${ORACLE_SID} force=yes format=12 <<< $(echo $ORACLE_PWD)
 ln -s $ORACLE_BASE/oradata/dbconfig/$ORACLE_SID/orapw$ORACLE_SID $ORACLE_HOME/dbs
 
