@@ -48,7 +48,7 @@ mkdir -p $ORACLE_BASE/oradata/$ORACLE_SID/archivelog
 mkdir -p $ORACLE_BASE/oradata/$ORACLE_SID/autobackup
 mkdir -p $ORACLE_BASE/oradata/$ORACLE_SID/flashback
 mkdir -p $ORACLE_BASE/oradata/$ORACLE_SID/fast_recovery_area
-mkdir -p $ORACLE_BASE/$ORACLE_SID/adump
+mkdir -p $ORACLE_BASE/admin/$ORACLE_SID/adump
 
 # Add aliases to set up the environment:
 cat << EOF >> $HOME/env
