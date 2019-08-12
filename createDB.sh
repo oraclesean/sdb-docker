@@ -263,6 +263,15 @@ echo " Running modifications to STANDBY database"
 echo "###########################################"
 echo " "
 
+# Create an additional diagnostic directory location and dummy alert log  based on
+# the unique name for the DG standby. This registers the diagnostic locations with
+# subdirectories based on both the ORACLE_SID and the UNIQUE_NAME with the "tail -f"
+# command at the end of the runOracle.sh script. If both directories aren't present,
+# the log output of the standby database following a DG switch won't appear in the
+# output of "docker logs -f".
+mkdir -p ${ORACLE_BASE}/diag/rdbms/$(echo ${CONTAINER_NAME,,})/${ORACLE_SID}/trace
+touch ${ORACLE_BASE}/diag/rdbms/$(echo ${CONTAINER_NAME,,})/${ORACLE_SID}/trace/alert_${ORACLE_SID}.log
+
 # Create a pfile for startup of the DG replication target:
 cat << EOF > $ORACLE_HOME/dbs/initDG.ora
 *.db_name='$ORACLE_SID'
