@@ -61,7 +61,7 @@ elif [ "$db_role" = "PHYSICAL STANDBY" ]; then
    status=`sqlplus -s / as sysdba << EOF
    set heading off;
    set pagesize 0;
-   select "HEALTHY" from v\\$database where open_mode in ('MOUNTED', 'READ ONLY', 'READ ONLY WITH APPLY');
+   select 'HEALTHY' from v\\$database where open_mode in ('MOUNTED', 'READ ONLY', 'READ ONLY WITH APPLY');
    exit;
 EOF`
 
