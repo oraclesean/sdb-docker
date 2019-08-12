@@ -244,6 +244,14 @@ dgmgrl sys/$ORACLE_PWD@$ORACLE_SID << EOF
 create configuration $DG_CONFIG as primary database is $ORACLE_SID connect identifier is $ORACLE_SID;
 add database $DG_TARGET as connect identifier is $DG_TARGET maintained as physical;
 enable configuration;
+EOF
+
+echo "Waiting for configuration to take effect"
+echo " "
+
+sleep 60s
+
+dgmgrl sys/$ORACLE_PWD@$ORACLE_SID << EOF
 show configuration;
 show database $ORACLE_SID
 show database $DG_TARGET
@@ -271,6 +279,11 @@ echo " "
 # output of "docker logs -f".
 mkdir -p ${ORACLE_BASE}/diag/rdbms/$(echo ${CONTAINER_NAME,,})/${ORACLE_SID}/trace
 touch ${ORACLE_BASE}/diag/rdbms/$(echo ${CONTAINER_NAME,,})/${ORACLE_SID}/trace/alert_${ORACLE_SID}.log
+
+# Create an entry in /etc/oratab:
+cat << EOF >> /etc/oratab
+${ORACLE_SID}:${ORACLE_HOME}:N
+EOF
 
 # Create a pfile for startup of the DG replication target:
 cat << EOF > $ORACLE_HOME/dbs/initDG.ora
