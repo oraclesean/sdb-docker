@@ -146,10 +146,10 @@ fi;
 IMAGE_NAME="oracle/database/gsm:$VERSION-$EDITION"
 
 # Go into version folder
-#cd "$VERSION" || {
-#  echo "Could not find version directory '$VERSION'";
-#  exit 1;
-#}
+cd "$VERSION" || {
+  echo "Could not find version directory '$VERSION'";
+  exit 1;
+}
 
 if [ ! "$SKIPMD5" -eq 1 ]; then
   checksumPackages
