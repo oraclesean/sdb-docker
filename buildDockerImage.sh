@@ -43,6 +43,11 @@ checksumPackages() {
       echo "Make sure to download missing files in folder $VERSION."
       exit 1;
     fi
+    if ! md5sum -c "Checksum.gsm"; then
+      echo "MD5 for required packages to build this image did not match!"
+      echo "Make sure to download missing files in folder $VERSION."
+      exit 1;
+    fi
   else
     echo "Ignored MD5 sum, 'md5sum' command not available.";
   fi
