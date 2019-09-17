@@ -35,8 +35,8 @@ export SHARD_DIR=~/sdb-docker
 
 ## Copy the downloaded Oracle GSM and Oracle database installation files to the Shard directory:
 ```
-cp LINUX.X64_193000_gsm.zip $SHARD_DIR
-cp LINUX.X64_193000_db_home.zip $SHARD_DIR
+cp LINUX.X64_193000_gsm.zip $SHARD_DIR/$DB_VERSION
+cp LINUX.X64_193000_db_home.zip $SHARD_DIR/$DB_VERSION
 ```
 
 ## Navigate to the Shard directory
