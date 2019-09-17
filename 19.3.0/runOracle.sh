@@ -33,27 +33,44 @@ function moveFiles {
 function symLinkFiles {
 
    if [ ! -L $ORACLE_HOME/dbs/spfile$ORACLE_SID.ora ]; then
+      if [ -f $ORACLE_HOME/dbs/spfile$ORACLE_SID.ora ]; then
+         mv $ORACLE_HOME/dbs/spfile$ORACLE_SID.ora $ORACLE_BASE/oradata/dbconfig/$ORACLE_SID/
+      fi;
       ln -s $ORACLE_BASE/oradata/dbconfig/$ORACLE_SID/spfile$ORACLE_SID.ora $ORACLE_HOME/dbs/spfile$ORACLE_SID.ora
    fi;
-   
+
    if [ ! -L $ORACLE_HOME/dbs/orapw$ORACLE_SID ]; then
+      if [ -f $ORACLE_HOME/dbs/orapw$ORACLE_SID ]; then
+         mv $ORACLE_HOME/dbs/orapw$ORACLE_SID $ORACLE_BASE/oradata/dbconfig/$ORACLE_SID/
+      fi;
       ln -s $ORACLE_BASE/oradata/dbconfig/$ORACLE_SID/orapw$ORACLE_SID $ORACLE_HOME/dbs/orapw$ORACLE_SID
    fi;
-   
+
    if [ ! -L $ORACLE_HOME/network/admin/sqlnet.ora ]; then
+      if [ -f $ORACLE_HOME/network/admin/sqlnet.ora ]; then
+         mv $ORACLE_HOME/network/admin/sqlnet.ora $ORACLE_BASE/oradata/dbconfig/$ORACLE_SID/
+      fi;
       ln -s $ORACLE_BASE/oradata/dbconfig/$ORACLE_SID/sqlnet.ora $ORACLE_HOME/network/admin/sqlnet.ora
    fi;
 
    if [ ! -L $ORACLE_HOME/network/admin/listener.ora ]; then
+      if [ -f $ORACLE_HOME/network/admin/listener.ora ]; then
+         mv $ORACLE_HOME/network/admin/listener.ora $ORACLE_BASE/oradata/dbconfig/$ORACLE_SID/
+      fi;
       ln -s $ORACLE_BASE/oradata/dbconfig/$ORACLE_SID/listener.ora $ORACLE_HOME/network/admin/listener.ora
    fi;
 
    if [ ! -L $ORACLE_HOME/network/admin/tnsnames.ora ]; then
+      if [ -f $ORACLE_HOME/network/admin/tnsnames.ora ]; then
+         mv $ORACLE_HOME/network/admin/tnsnames.ora $ORACLE_BASE/oradata/dbconfig/$ORACLE_SID/
+      fi;
       ln -s $ORACLE_BASE/oradata/dbconfig/$ORACLE_SID/tnsnames.ora $ORACLE_HOME/network/admin/tnsnames.ora
    fi;
 
-   # oracle user does not have permissions in /etc, hence cp and not ln 
-   cp $ORACLE_BASE/oradata/dbconfig/$ORACLE_SID/oratab /etc/oratab
+   # oracle user does not have permissions in /etc, hence cp and not ln
+   if [ -f $ORACLE_BASE/oradata/dbconfig/$ORACLE_SID/oratab ]; then
+      cp $ORACLE_BASE/oradata/dbconfig/$ORACLE_SID/oratab /etc/oratab
+   fi;
 
 }
 
@@ -181,6 +198,8 @@ else
 
   # Move database operational files to oradata
 #  moveFiles;
+# Removed this and migrated the functionality into createDB.sh. Running this step here
+# moves/links files before they're created.
 
   # Execute custom provided setup scripts
   $ORACLE_BASE/$USER_SCRIPTS_FILE $ORACLE_BASE/scripts/setup
