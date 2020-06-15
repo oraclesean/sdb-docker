@@ -1,0 +1,17 @@
+create shardcatalog -database sh00pdb1
+                    -user sdbadmin/oracle
+                    -sharding user
+                    -region na,eu,apac
+                    -protectmode maxperformance
+                    -sdb sh00pdb1
+                    -configname sh00pdb1
+
+connect sdbadmin/oracle@sh00pdb1
+
+add gsm -gsm sharddir1
+        -catalog sh00pdb1
+        -pwd oracle
+        -listener 1571
+        -region na
+
+start gsm -gsm sharddir1

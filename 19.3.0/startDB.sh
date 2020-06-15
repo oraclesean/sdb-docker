@@ -21,22 +21,60 @@ fi;
 # Start Listener
 lsnrctl start
 
-if [ "$ROLE" = "STANDBY" ]
-then
-
-# Start standby databases in managed recovery
+# Startup mount
 sqlplus / as sysdba << EOF
-startup mount;
+startup mount
+EOF
+
+# Determine the database role
+database_role=$(sqlplus -S / as sysdba << EOF
+select database_role from v\$database;
+EOF
+)
+
+# The expected output is either:
+# DATABASE_ROLE ---------------- PRIMARY
+# DATABASE_ROLE ---------------- PHYSICAL STANDBY
+# Determine the role:
+
+  if [[ $database_role =~ PRIMARY ]]
+then export ROLE="PRIMARY"
+elif [[ $database_role =~ STANDBY ]]
+then export ROLE="STANDBY"
+else export ROLE="$ROLE"
+fi
+
+  if [ "$ROLE" = "STANDBY" ]
+then # Start standby databases in managed recovery
+sqlplus / as sysdba << EOF
 alter database recover managed standby database disconnect from session;
 exit
 EOF
 
-else
-
-# Start database
+else # Open the database
 sqlplus / as sysdba << EOF
-startup
+alter database open;
 exit
 EOF
 
 fi
+
+  if [ "$SDB_ROLE" != "CATALOG" ]
+then # Start the scheduler agent
+     $ORACLE_HOME/bin/schagent -start
+     $ORACLE_HOME/bin/schagent -status
+else # Start the shard catalog, services
+     export ORACLE_HOME=$GSM_HOME
+     export LD_LIBRARY_PATH=$GSM_HOME/lib
+     export PATH=$GSM_HOME:$PATH
+     $GSM_HOME/bin/gdsctl << EOF
+connect $SDB_ADMIN/$SDB_PASS@$ORACLE_PDB
+set gsm -gsm $SHARD_DIRECTOR
+start gsm -gsm $SHARD_DIRECTOR
+start service -service OLTP_RW_SVC
+config
+config 
+EOF
+
+fi
+

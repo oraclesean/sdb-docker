@@ -1,0 +1,11 @@
+# gsm.ora file for sharding demo
+SH00PDB1=
+(configuration=
+  (listener=(address=(protocol=tcp)(host=SH00)(port=1571)))
+  (parameter_list =
+    (log_level=off)
+    (inbound_connect_timeout=0)
+    (outbound_connect_timeout=0)
+    (trace_level=off)
+  )
+)

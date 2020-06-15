@@ -3,6 +3,7 @@ services:
   SH00:
     image: oracle/database/gsm:19.3.0-ee
     container_name: SH00
+    hostname: SH00
     volumes:
       - "/Users/sean.scott/oradata/SH00:/opt/oracle/oradata"
       - "/Users/sean.scott/sdb-docker:/opt/oracle/scripts"
@@ -10,19 +11,22 @@ services:
       CONTAINER_NAME: SH00
       DG_CONFIG: NONE
       DG_TARGET: 
-      GDS_USER: gdsadmin
-      GDS_PASS: oracle
+      SDB_ADMIN: sdbadmin
+      SDB_PASS: oracle
       GSM_PASS: oracle
       GSM_PORT: 1571
-      GSM_REGION: na,eu,asia
+      GSM_REGION: NA,EU,APAC
       ORACLE_PDB: SH00PDB1
       ORACLE_PWD: oracle
       ORACLE_SID: SH00
+      DB_UNQNAME: SH00
       ROLE: PRIMARY
       SHARD_DB: SH00PDB1
-      SHARD_DBNAME: shardcat
-      SHARD_DIRECTOR: sharddir1
+      SHARD_DBNAME: SDB-USER
+      SHARD_DIRECTOR: SHARDDIR1
       SHARD_ROLE: CATALOG
+      CATALOG_SID: SH00PDB1
+      CATALOG_HOST: SH00
     ports:
       - "1200:1521"
       - "1710:1571"
@@ -31,6 +35,7 @@ services:
   SH11:
     image: oracle/database/gsm:19.3.0-ee
     container_name: SH11
+    hostname: SH11
     volumes:
       - "/Users/sean.scott/oradata/SH11:/opt/oracle/oradata"
       - "/Users/sean.scott/sdb-docker:/opt/oracle/scripts"
@@ -38,19 +43,22 @@ services:
       CONTAINER_NAME: SH11
       DG_CONFIG: SH1
       DG_TARGET: SH21
-      GDS_USER: gdsadmin
-      GDS_PASS: oracle
+      SDB_ADMIN: sdbadmin
+      SDB_PASS: oracle
       GSM_PASS: oracle
       GSM_PORT: 
-      GSM_REGION: na
+      GSM_REGION: NA
       ORACLE_PDB: SH11PDB1
       ORACLE_PWD: oracle
       ORACLE_SID: SH11
+      DB_UNQNAME: SH11
       ROLE: PRIMARY
       SHARD_DB: 
       SHARD_DBNAME: 
       SHARD_DIRECTOR: 
       SHARD_ROLE: 
+      CATALOG_SID: SH00PDB1
+      CATALOG_HOST: SH00
     ports:
       - "1201:1521"
       - "1711:1571"
@@ -59,6 +67,7 @@ services:
   SH12:
     image: oracle/database/gsm:19.3.0-ee
     container_name: SH12
+    hostname: SH12
     volumes:
       - "/Users/sean.scott/oradata/SH12:/opt/oracle/oradata"
       - "/Users/sean.scott/sdb-docker:/opt/oracle/scripts"
@@ -66,19 +75,22 @@ services:
       CONTAINER_NAME: SH12
       DG_CONFIG: SH2
       DG_TARGET: SH22
-      GDS_USER: gdsadmin
-      GDS_PASS: oracle
+      SDB_ADMIN: sdbadmin
+      SDB_PASS: oracle
       GSM_PASS: oracle
       GSM_PORT: 1572
-      GSM_REGION: eu
+      GSM_REGION: EU
       ORACLE_PDB: SH12PDB1
       ORACLE_PWD: oracle
       ORACLE_SID: SH12
+      DB_UNQNAME: SH12
       ROLE: PRIMARY
       SHARD_DB: SH00PDB1
       SHARD_DBNAME: 
-      SHARD_DIRECTOR: sharddir2
+      SHARD_DIRECTOR: SHARDDIR2
       SHARD_ROLE: DIRECTOR
+      CATALOG_SID: SH00PDB1
+      CATALOG_HOST: SH00
     ports:
       - "1203:1521"
       - "1713:1571"
@@ -87,6 +99,7 @@ services:
   SH13:
     image: oracle/database/gsm:19.3.0-ee
     container_name: SH13
+    hostname: SH13
     volumes:
       - "/Users/sean.scott/oradata/SH13:/opt/oracle/oradata"
       - "/Users/sean.scott/sdb-docker:/opt/oracle/scripts"
@@ -94,105 +107,24 @@ services:
       CONTAINER_NAME: SH13
       DG_CONFIG: SH3
       DG_TARGET: SH23
-      GDS_USER: gdsadmin
-      GDS_PASS: oracle
+      SDB_ADMIN: sdbadmin
+      SDB_PASS: oracle
       GSM_PASS: oracle
       GSM_PORT: 
-      GSM_REGION: asia
+      GSM_REGION: APAC
       ORACLE_PDB: SH13PDB1
       ORACLE_PWD: oracle
       ORACLE_SID: SH13
+      DB_UNQNAME: SH13
       ROLE: PRIMARY
       SHARD_DB: 
       SHARD_DBNAME: 
       SHARD_DIRECTOR: 
       SHARD_ROLE: 
+      CATALOG_SID: SH00PDB1
+      CATALOG_HOST: SH00
     ports:
       - "1205:1521"
       - "1715:1571"
       - "1725:1572"
-
-  SH21:
-    image: oracle/database/gsm:19.3.0-ee
-    container_name: SH21
-    volumes:
-      - "/Users/sean.scott/oradata/SH21:/opt/oracle/oradata"
-      - "/Users/sean.scott/sdb-docker:/opt/oracle/scripts"
-    environment:
-      CONTAINER_NAME: SH21
-      DG_CONFIG: SH1
-      DG_TARGET: SH11
-      GDS_USER: 
-      GDS_PASS: 
-      GSM_PASS: 
-      GSM_PORT: 
-      GSM_REGION: na
-      ORACLE_PDB: SH11PDB1
-      ORACLE_PWD: oracle
-      ORACLE_SID: SH11
-      ROLE: STANDBY
-      SHARD_DB: 
-      SHARD_DBNAME: 
-      SHARD_DIRECTOR: 
-      SHARD_ROLE: 
-    ports:
-      - "1202:1521"
-      - "1712:1571"
-      - "1722:1572"
-
-  SH22:
-    image: oracle/database/gsm:19.3.0-ee
-    container_name: SH22
-    volumes:
-      - "/Users/sean.scott/oradata/SH22:/opt/oracle/oradata"
-      - "/Users/sean.scott/sdb-docker:/opt/oracle/scripts"
-    environment:
-      CONTAINER_NAME: SH22
-      DG_CONFIG: SH2
-      DG_TARGET: SH12
-      GDS_USER: 
-      GDS_PASS: 
-      GSM_PASS: 
-      GSM_PORT: 
-      GSM_REGION: eu
-      ORACLE_PDB: SH12PDB1
-      ORACLE_PWD: oracle
-      ORACLE_SID: SH12
-      ROLE: STANDBY
-      SHARD_DB: 
-      SHARD_DBNAME: 
-      SHARD_DIRECTOR: 
-      SHARD_ROLE: 
-    ports:
-      - "1204:1521"
-      - "1714:1571"
-      - "1724:1572"
-
-  SH23:
-    image: oracle/database/gsm:19.3.0-ee
-    container_name: SH23
-    volumes:
-      - "/Users/sean.scott/oradata/SH23:/opt/oracle/oradata"
-      - "/Users/sean.scott/sdb-docker:/opt/oracle/scripts"
-    environment:
-      CONTAINER_NAME: SH23
-      DG_CONFIG: SH3
-      DG_TARGET: SH13
-      GDS_USER: 
-      GDS_PASS: 
-      GSM_PASS: 
-      GSM_PORT: 
-      GSM_REGION: asia
-      ORACLE_PDB: SH13PDB1
-      ORACLE_PWD: oracle
-      ORACLE_SID: SH13
-      ROLE: STANDBY
-      SHARD_DB: 
-      SHARD_DBNAME: 
-      SHARD_DIRECTOR: 
-      SHARD_ROLE: 
-    ports:
-      - "1206:1521"
-      - "1716:1571"
-      - "1726:1572"
 

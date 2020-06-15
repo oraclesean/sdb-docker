@@ -1,0 +1,23 @@
+help
+config
+status
+
+config sdb
+
+config shardspace
+
+config cdb
+
+validate -catpwd oracle
+
+config database
+config database -database sh11_sh11pdb1
+databases
+
+status gsm
+status service
+
+config shard
+config shard -shard sh11_sh11pdb1
+
+config vncr

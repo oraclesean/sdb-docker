@@ -1,8 +1,8 @@
-# Host | ID | Role    | DG Cfg | SID  | DG_TARGET | ORACLE_PWD | SDB Role | GSM_PASS | GDS_USER | GDS_PASS | SHARD_DB | SDB_NAME | SDB Dir   | GSM_PORT | Region
-SH00   | 0  | PRIMARY | NONE   | SH00 |           | oracle     | CATALOG  | oracle   | gdsadmin | oracle   | SH00PDB1 | shardcat | sharddir1 | 1571     | na,eu,asia
-SH11   | 1  | PRIMARY | SH1    | SH11 | SH21      | oracle     |          | oracle   | gdsadmin | oracle   |          |          |           |          | na
-SH21   | 2  | STANDBY | SH1    | SH11 | SH11      | oracle     |          |          |          |          |          |          |           |          | na
-SH12   | 3  | PRIMARY | SH2    | SH12 | SH22      | oracle     | DIRECTOR | oracle   | gdsadmin | oracle   | SH00PDB1 |          | sharddir2 | 1572     | eu
-SH22   | 4  | STANDBY | SH2    | SH12 | SH12      | oracle     |          |          |          |          |          |          |           |          | eu
-SH13   | 5  | PRIMARY | SH3    | SH13 | SH23      | oracle     |          | oracle   | gdsadmin | oracle   |          |          |           |          | asia
-SH23   | 6  | STANDBY | SH3    | SH13 | SH13      | oracle     |          |          |          |          |          |          |           |          | asia
+# Host | ID | Role    | DG Cfg | SID  | DB_UNQNAME | DG_TARGET | ORACLE_PWD | SDB Role | GSM_PASS | SDB_ADMIN | SDB_PASS | SHARD_DB | SDB_NAME | SDB Dir   | GSM_PORT | Region
+SH00   | 0  | PRIMARY | NONE   | SH00 | SH00       |           | oracle     | CATALOG  | oracle   | sdbadmin  | oracle   | SH00PDB1 | SDB-USER | SHARDDIR1 | 1571     | NA,EU,APAC
+SH11   | 1  | PRIMARY | SH1    | SH11 | SH11       | SH21      | oracle     |          | oracle   | sdbadmin  | oracle   |          |          |           |          | NA
+#SH21   | 2  | STANDBY | SH1    | SH11 | SH21       | SH11      | oracle     |          | oracle   | sdbadmin  | oracle   |          |          |           |          | NA
+SH12   | 3  | PRIMARY | SH2    | SH12 | SH12       | SH22      | oracle     | DIRECTOR | oracle   | sdbadmin  | oracle   | SH00PDB1 |          | SHARDDIR2 | 1572     | EU
+#SH22   | 4  | STANDBY | SH2    | SH12 | SH22       | SH12      | oracle     |          | oracle   | sdbadmin  | oracle   |          |          |           |          | EU
+SH13   | 5  | PRIMARY | SH3    | SH13 | SH13       | SH23      | oracle     |          | oracle   | sdbadmin  | oracle   |          |          |           |          | APAC
+#SH23   | 6  | STANDBY | SH3    | SH13 | SH23       | SH13      | oracle     |          | oracle   | sdbadmin  | oracle   |          |          |           |          | APAC

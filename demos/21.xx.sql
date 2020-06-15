@@ -1,0 +1,1 @@
+scripts/21.partitions.sql

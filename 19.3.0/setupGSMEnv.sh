@@ -9,6 +9,4 @@
 # ------------------------------------------------------------
 mkdir -p $GSM_HOME && \
 chown -R oracle:dba $GSM_HOME && \
-yum -y install vi && \
 rm -rf /var/cache/yum 
-

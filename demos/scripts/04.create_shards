@@ -1,0 +1,25 @@
+add shardspace -shardspace NORTHAMERICA
+add shardspace -shardspace EUROPE
+add shardspace -shardspace ASIAPACIFIC
+
+add cdb -connect SH11:1521/SH11 -pwd oracle
+add cdb -connect SH12:1521/SH12 -pwd oracle
+add cdb -connect SH13:1521/SH13 -pwd oracle
+
+add shard -connect SH11:1521/SH11PDB1 -pwd oracle
+          -shardspace NORTHAMERICA
+          -deploy_as primary
+          -region NA -cdb SH11
+
+add shard -connect SH12:1521/SH12PDB1 -pwd oracle
+          -shardspace EUROPE ...
+          -region EU -cdb SH12
+
+add shard -connect SH13:1521/SH13PDB1 -pwd oracle
+          -shardspace ASIAPACIFIC ...
+          -region APAC -cdb SH13
+
+deploy
+
+add service -service OLTP_RW_SVC -role primary
+start service -service OLTP_RW_SVC

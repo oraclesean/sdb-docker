@@ -83,3 +83,6 @@ rm -rf $ORACLE_HOME/suptools && \
 rm -rf /tmp/* && \
 # Database files directory
 rm -rf $INSTALL_DIR/database
+# Add SQLPlus settings to glogin
+echo "
+set pages 9999 lines 250" >> $ORACLE_HOME/sqlplus/admin/glogin.sql

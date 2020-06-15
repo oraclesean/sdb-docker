@@ -47,13 +47,14 @@ ENV ORACLE_BASE=/opt/oracle \
     RUN_FILE="runOracle.sh" \
     START_FILE="startDB.sh" \
     CREATE_DB_FILE="createDB.sh" \
+    CREATE_SDB_FILE="createSDB.sh" \
     SETUP_LINUX_FILE="setupLinuxEnv.sh" \
     SETUP_GSM_FILE="setupGSMEnv.sh" \
     CHECK_SPACE_FILE="checkSpace.sh" \
     CHECK_DB_FILE="checkDBStatus.sh" \
     USER_SCRIPTS_FILE="runUserScripts.sh" \
     INSTALL_GSM_BINARIES_FILE="installGSMBinaries.sh" \
-    INSTALL_DB_BINARIES_FILE="installDBBinaries.sh" 
+    INSTALL_DB_BINARIES_FILE="installDBBinaries.sh"
 
 # Use second ENV so that variable get substituted
 # Add the GSM_HOME to the PATH
@@ -62,11 +63,11 @@ ENV PATH=$ORACLE_HOME/bin:$GSM_HOME/bin:$ORACLE_HOME/OPatch/:/usr/sbin:/home/ora
     CLASSPATH=$ORACLE_HOME/jlib:$ORACLE_HOME/rdbms/jlib:$GSM_HOME/jlib
 
 # Copy files needed during both installation and runtime
-# Add the SETUP_GSM_FILE
+# Add the GSM and SDB files
 # ------------------------------------------------------
-COPY $SETUP_GSM_FILE $CHECK_SPACE_FILE $INSTALL_DIR/
-COPY $SETUP_LINUX_FILE $CHECK_SPACE_FILE $INSTALL_DIR/
+COPY $SETUP_GSM_FILE $CHECK_SPACE_FILE $SETUP_LINUX_FILE $INSTALL_DIR/
 COPY $RUN_FILE $START_FILE $CREATE_DB_FILE $CONFIG_RSP $PWD_FILE $CHECK_DB_FILE $USER_SCRIPTS_FILE $ORACLE_BASE/
+COPY $CREATE_SDB_FILE $ORACLE_BASE/
 
 RUN chmod ug+x $INSTALL_DIR/*.sh && \
     sync && \
