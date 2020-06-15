@@ -62,14 +62,14 @@ The pluggable database is ${ORACLE_SID}PDB1.
 
 ```
 cat << EOF > $SHARD_DIR/config_dataguard.lst
-# Container | ID | Role   | DG Config | SID  | DG_TARGET | Oracle Pass | Shard Role | GSM pass | GDS user | GDS pass | Shard DB | Shard DB Name | Shard Dir | Port | Region
-SH00        | 0  | PRIMARY| NONE      | SH00 |           | oracle      | CATALOG    | oracle   | gdsadmin | oracle   | SH00PDB1 | shardcat      | sharddir1 | 1571 | na,eu,asia
-SH11        | 1  | PRIMARY| SH1       | SH11 | SH21      | oracle      |            | oracle   | gdsadmin | oracle   |          |               |           |      | na
-SH21        | 2  | STANDBY| SH1       | SH11 | SH11      | oracle      |            |          |          |          |          |               |           |      | na
-SH12        | 3  | PRIMARY| SH2       | SH12 | SH22      | oracle      | DIRECTOR   | oracle   | gdsadmin | oracle   | SH00PDB1 |               | sharddir2 | 1572 | eu
-SH22        | 4  | STANDBY| SH2       | SH12 | SH12      | oracle      |            |          |          |          |          |               |           |      | eu
-SH13        | 5  | PRIMARY| SH3       | SH13 | SH23      | oracle      |            | oracle   | gdsadmin | oracle   |          |               |           |      | asia
-SH23        | 6  | STANDBY| SH3       | SH13 | SH13      | oracle      |            |          |          |          |          |               |           |      | asia
+# Container | ID | Role   | DG Config | SID  | DG_TARGET | Oracle Pass | Shard Role | GSM pass | SDB Admin | SDB pass | Shard DB | Shard DB Name | Shard Dir | Port | Region
+SH00        | 0  | PRIMARY| NONE      | SH00 |           | oracle      | CATALOG    | oracle   | sdbadmin  | oracle   | SH00PDB1 | shardcat      | sharddir1 | 1571 | na,eu,asia
+SH11        | 1  | PRIMARY| SH1       | SH11 | SH21      | oracle      |            | oracle   | sdbadmin  | oracle   |          |               |           |      | na
+SH21        | 2  | STANDBY| SH1       | SH11 | SH11      | oracle      |            |          |           |          |          |               |           |      | na
+SH12        | 3  | PRIMARY| SH2       | SH12 | SH22      | oracle      | DIRECTOR   | oracle   | sdbadmin  | oracle   | SH00PDB1 |               | sharddir2 | 1572 | eu
+SH22        | 4  | STANDBY| SH2       | SH12 | SH12      | oracle      |            |          |           |          |          |               |           |      | eu
+SH13        | 5  | PRIMARY| SH3       | SH13 | SH23      | oracle      |            | oracle   | sdbadmin  | oracle   |          |               |           |      | asia
+SH23        | 6  | STANDBY| SH3       | SH13 | SH13      | oracle      |            |          |           |          |          |               |           |      | asia
 EOF
 ```
 
@@ -89,7 +89,7 @@ cat << EOF > $SHARD_DIR/tnsnames.ora
 EOF
 
 # Populate the docker-compose.yml file:
-egrep -v "^$|^#" $SHARD_DIR/config_dataguard.lst | sed -e 's/[[:space:]]//g' | sort | while IFS='|' read CONTAINER_NAME CONTAINER_ID ROLE DG_CONFIG ORACLE_SID DG_TARGET ORACLE_PWD SHARD_ROLE GSM_PASS GDS_USER GDS_PASS SHARD_DB SHARD_DBNAME SHARD_DIRECTOR GSM_PORT GSM_REGION
+egrep -v "^$|^#" $SHARD_DIR/config_dataguard.lst | sed -e 's/[[:space:]]//g' | sort | while IFS='|' read CONTAINER_NAME CONTAINER_ID ROLE DG_CONFIG ORACLE_SID DG_TARGET ORACLE_PWD SHARD_ROLE GSM_PASS SDB_ADMIN SDB_PASS SHARD_DB SHARD_DBNAME SHARD_DIRECTOR GSM_PORT GSM_REGION
 do
 
 # Write the Docker compose file entry:
@@ -104,8 +104,8 @@ cat << EOF >> $COMPOSE_YAML
       CONTAINER_NAME: $CONTAINER_NAME
       DG_CONFIG: $DG_CONFIG
       DG_TARGET: $DG_TARGET
-      GDS_USER: $GDS_USER
-      GDS_PASS: $GDS_PASS
+      SDB_ADMIN: $SDB_ADMIN
+      SDB_PASS: $SDB_PASS
       GSM_PASS: $GSM_PASS
       GSM_PORT: $GSM_PORT
       GSM_REGION: $GSM_REGION
